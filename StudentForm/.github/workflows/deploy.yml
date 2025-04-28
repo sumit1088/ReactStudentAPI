@@ -1,0 +1,66 @@
+﻿name: CI/CD Pipeline for ASP.NET Core Web API
+
+on:
+  push:
+    branches:
+      - main  # Trigger pipeline on push to the main branch
+  pull_request:
+    branches:
+      - main  # Trigger pipeline on PR to the main branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest  # Use Ubuntu runner
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up .NET SDK
+      uses: actions/setup-dotnet@v2
+      with:
+        dotnet-version: '6.0'  # Change to your .NET version
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build the project
+      run: dotnet build --configuration Release
+
+    - name: Run tests
+      run: dotnet test
+
+    - name: Publish the app
+      run: dotnet publish --configuration Release --output ./publish
+
+  deploy:
+    runs-on: ubuntu-latest  # Use Ubuntu runner for deployment tasks
+
+    needs: build  # Ensure deployment happens only after build is successful
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Install AWS CLI
+      run: |
+        curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+        unzip awscliv2.zip
+        sudo ./aws/install
+
+    - name: Configure AWS CLI
+      run: |
+        aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws configure set region ${{ secrets.AWS_REGION }}
+
+    - name: Deploy to EC2
+      run: |
+        scp -i /path/to/your-ec2-key.pem -r ./publish ec2-user@<your-ec2-public-ip>:/var/www/your-api/
+
+    - name: SSH into EC2 and restart the app
+      run: |
+        ssh -i /path/to/your-ec2-key.pem ec2-user@<your-ec2-public-ip> <<EOF
+          cd /var/www/your-api/
+          sudo systemctl restart your-api.service  # Restart the app service
+        EOF
