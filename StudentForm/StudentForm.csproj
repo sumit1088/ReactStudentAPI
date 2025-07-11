@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <None Include=".circleci\config.yml" />
+    <None Include="F:\CircleCI Dot net\ReactStudentAPI\.circleci\config.yml" Link="config.yml" />
     <None Include=".github\workflows\deploy.yml" />
   </ItemGroup>
 
